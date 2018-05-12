@@ -51,14 +51,14 @@ Resources:
             Schedule: rate(1 minute)
             Input: >-
               {
-                "body": "team_id=T0001\nteam_domain=example\nchannel_id=C2147483705\nchannel_name=test\nuser_id=U2147483697\nuser_name=Steve\ncommand=/gimmefoodtrucks",
+                "body": "team_id=T0001&team_domain=example&channel_id=C2147483705&channel_name=test&user_id=U2147483697&user_name=Steve&command=/gimmefoodtrucks",
                 "trigger": "canary"
               }
       Environment:
         Variables:
-          address: !Ref Address
-          data_table: !Ref FoodTruckDataTable
-          token_parameter: !Ref Token
+          ADDRESS: !Ref Address
+          DATA_TABLE: !Ref FoodTruckDataTable
+          TOKEN_PARAMETER: !Ref Token
       AutoPublishAlias: live
       DeploymentPreference:
         Type: Linear10PercentEvery1Minute
@@ -103,8 +103,8 @@ Resources:
             Schedule: rate(4 hours)
       Environment:
         Variables:
-          address: !Ref Address
-          data_table: !Ref FoodTruckDataTable
+          ADDRESS: !Ref Address
+          DATA_TABLE: !Ref FoodTruckDataTable
 
   FoodTruckDataTable:
      Type: AWS::DynamoDB::Table

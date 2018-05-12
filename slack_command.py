@@ -6,9 +6,9 @@ import os
 from base64 import b64decode
 from urllib.parse import parse_qs
 
-ADDRESS = os.environ['address']
-DATA_TABLE = os.environ['data_table']
-TOKEN_PARAMETER = os.environ['token_parameter']
+ADDRESS = os.environ['ADDRESS']
+DATA_TABLE = os.environ['DATA_TABLE']
+TOKEN_PARAMETER = os.environ['TOKEN_PARAMETER']
 
 ssm = boto3.client('ssm')
 expected_token = ssm.get_parameter(Name=TOKEN_PARAMETER, WithDecryption=True)['Parameter']['Value']
@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 def respond(err, res=None):
     return {
         'statusCode': '400' if err else '200',
-        'body': err.message if err else json.dumps(res),
+        'body': str(err) if err else json.dumps(res),
         'headers': {
             'Content-Type': 'application/json',
         },
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
         if token != expected_token:
             logger.error("Request token (%s) does not match expected", token)
             return respond(Exception('Invalid request token'))
-    elif event['trigger'] != 'canary':
+    elif 'trigger' not in event or event['trigger'] != 'canary':
         logger.error('No request token provided')
         return respond(Exception('Invalid request token'))
 
