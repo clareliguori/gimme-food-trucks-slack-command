@@ -1,0 +1,11 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - pip install -r requirements.txt -t .
+      - aws cloudformation package --template-file template.yml --s3-bucket $ARTIFACTS_BUCKET --output-template-file deploy.yml
+
+artifacts:
+  files:
+    - 'deploy.yml'

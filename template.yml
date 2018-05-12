@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description:  >-
+  An application that handles a Slack slash command and returns the current day's food trucks.
+
+Parameters:
+  Address:
+    Description: Your office address in Seattle
+    Type: String
+  Token:
+    Description: SSM Parameter Store parameter that stores the Slack token
+    Type: String
+
+Outputs:
+  SlackURL:
+    Description: "API Gateway endpoint URL for Slack command"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/slack/"
+
+Resources:
+  SlackCommand:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: slack_command.lambda_handler
+      Runtime: python3.6
+      CodeUri: .
+      Description: >-
+        A function that handles a Slack slash command and returns the current day's food trucks.
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref FoodTruckDataTable
+        - KMSDecryptPolicy:
+            KeyId: '*'
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "ssm:GetParameter"
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Token}"
+      Events:
+        SlackEndpoint:
+          Type: Api
+          Properties:
+            Path: /slack
+            Method: ANY
+        Canary:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+      Environment:
+        Variables:
+          address: !Ref Address
+          data_table: !Ref FoodTruckDataTable
+          token_parameter: !Ref Token
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: Linear10PercentEvery1Minute
+        Alarms:
+          - LambdaAliasErrorMetricGreaterThanZeroAlarm
+          - LambdaLatestVersionErrorMetricGreaterThanZeroAlarm
+
+  LambdaAliasErrorMetricGreaterThanZeroAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${SlackCommand}:live"
+        - Name: FunctionName
+          Value: !Ref SlackCommand
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+
+  LambdaLatestVersionErrorMetricGreaterThanZeroAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Ref SlackCommand.Version
+        - Name: FunctionName
+          Value: !Ref SlackCommand
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+
+  RetrieveData:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: retrieve_data.lambda_handler
+      Runtime: python3.6
+      CodeUri: .
+      Description: >-
+        A function that retrieves and stores the current data from seattlefoodtruck.com
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FoodTruckDataTable
+      Events:
+        Sync:
+          Type: Schedule
+          Properties:
+            Schedule: rate(4 hours)
+      Environment:
+        Variables:
+          address: !Ref Address
+          data_table: !Ref FoodTruckDataTable
+
+  FoodTruckDataTable:
+     Type: AWS::DynamoDB::Table
+     Properties:
+       AttributeDefinitions:
+         - AttributeName: id
+           AttributeType: S
+       KeySchema:
+         - AttributeName: id
+           KeyType: HASH
+       ProvisionedThroughput:
+         ReadCapacityUnits: 5
+         WriteCapacityUnits: 5
