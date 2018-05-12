@@ -63,9 +63,9 @@ Resources:
       DeploymentPreference:
         Type: Linear10PercentEvery1Minute
         Alarms:
-          - LambdaAliasErrorMetricGreaterThanZeroAlarm
+          - !Ref SlackCommandErrorsAlarm
 
-  LambdaAliasErrorMetricGreaterThanZeroAlarm:
+  SlackCommandErrorsAlarm:
     Type: "AWS::CloudWatch::Alarm"
     Properties:
       AlarmDescription: Lambda Function Error > 0
