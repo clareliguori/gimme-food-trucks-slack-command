@@ -64,7 +64,6 @@ Resources:
         Type: Linear10PercentEvery1Minute
         Alarms:
           - LambdaAliasErrorMetricGreaterThanZeroAlarm
-          - LambdaLatestVersionErrorMetricGreaterThanZeroAlarm
 
   LambdaAliasErrorMetricGreaterThanZeroAlarm:
     Type: "AWS::CloudWatch::Alarm"
@@ -74,23 +73,6 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${SlackCommand}:live"
-        - Name: FunctionName
-          Value: !Ref SlackCommand
-      EvaluationPeriods: 2
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 60
-      Statistic: Sum
-      Threshold: 0
-
-  LambdaLatestVersionErrorMetricGreaterThanZeroAlarm:
-    Type: "AWS::CloudWatch::Alarm"
-    Properties:
-      AlarmDescription: Lambda Function Error > 0
-      ComparisonOperator: GreaterThanThreshold
-      Dimensions:
-        - Name: Resource
-          Value: !Ref SlackCommand.Version
         - Name: FunctionName
           Value: !Ref SlackCommand
       EvaluationPeriods: 2
