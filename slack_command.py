@@ -29,9 +29,14 @@ def respond(err, res=None):
 
 def lambda_handler(event, context):
     params = parse_qs(event['body'])
-    token = params['token'][0]
-    if token != expected_token:
-        logger.error("Request token (%s) does not match expected", token)
+
+    if 'token' in params:
+        token = params['token'][0]
+        if token != expected_token:
+            logger.error("Request token (%s) does not match expected", token)
+            return respond(Exception('Invalid request token'))
+    elif event['trigger'] != 'canary':
+        logger.error('No request token provided')
         return respond(Exception('Invalid request token'))
 
     user = params['user_name'][0]

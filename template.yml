@@ -49,6 +49,11 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: rate(1 minute)
+            Input: >-
+              {
+                "body": "team_id=T0001\nteam_domain=example\nchannel_id=C2147483705\nchannel_name=test\nuser_id=U2147483697\nuser_name=Steve\ncommand=/gimmefoodtrucks",
+                "trigger": "canary"
+              }
       Environment:
         Variables:
           address: !Ref Address
