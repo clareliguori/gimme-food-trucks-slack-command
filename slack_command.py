@@ -4,7 +4,7 @@ import logging
 import os
 
 from base64 import b64decode
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs,urlencode
 
 ADDRESS = os.environ['ADDRESS']
 DATA_TABLE = os.environ['DATA_TABLE']
@@ -30,14 +30,22 @@ def get_data():
     return item['data']
 
 def format_data(data):
-    lines = []
+    lines = ['Here are the food trucks in your area today:']
 
     for item in data:
         location = item['location']
-        lines.append("%s (%s)" % (location['name'], location['address']))
+
+        map_qs = {
+            'api' : '1',
+            'origin': "%s, Seattle, WA" % (ADDRESS),
+            'destination': location['address'],
+            'travelmode': 'walking'
+        }
+
+        lines.append("\n*%s* (<https://www.google.com/maps/dir/?%s|map>)" % (location['name'], urlencode(map_qs)))
 
         for truck in item['trucks']:
-            lines.append("%s (%s)" % (truck['name'], truck['description']))
+            lines.append("- %s (%s)" % (truck['name'], truck['description']))
 
     return '\n'.join(lines)
 
