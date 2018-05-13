@@ -52,17 +52,32 @@ In your Slack room, try it out!
 
 ## Local testing
 
-API:
+Setup:
 ```
-AWS_REGION="eu-central-1" ADDRESS="2111 7th Ave" TOKEN_PARAMETER="gimme-food-trucks-token" DATA_TABLE="blah" sam local start-api
+export AWS_REGION="eu-central-1"
+
+export ADDRESS="2111 7th Ave"
+
+export TOKEN_PARAMETER="gimme-food-trucks-token"
+
+export DATA_TABLE=`aws cloudformation describe-stack-resource --stack-name gimme-food-trucks-application --logical-resource-id FoodTruckDataTable --query 'StackResourceDetail.PhysicalResourceId' --output text`
 
 export TOKEN=<token>
+```
+
+Test API:
+```
+sam local start-api
 
 curl --header "application/x-www-form-urlencoded" --request POST --data "token=$TOKEN&team_id=T0001&team_domain=example&channel_id=C2147483705&channel_name=test&user_id=U2147483697&user_name=Steve&command=/gimmefoodtrucks" http://localhost:3000/slack
-
 ```
 
-Canary:
+Test Canary:
 ```
-echo '{"body": "token='$TOKEN'&team_id=T0001&team_domain=example&channel_id=C2147483705&channel_name=test&user_id=U2147483697&user_name=Steve&command=/gimmefoodtrucks", "trigger": "canary" }' | AWS_REGION="eu-central-1" ADDRESS="2111 7th Ave" TOKEN_PARAMETER="gimme-food-trucks-token" DATA_TABLE="blah" sam local invoke "SlackCommand"
+echo '{"body": "token='$TOKEN'&team_id=T0001&team_domain=example&channel_id=C2147483705&channel_name=test&user_id=U2147483697&user_name=Steve&command=/gimmefoodtrucks", "trigger": "canary" }' | sam local invoke "SlackCommand"
+```
+
+Test Data Retrieval:
+```
+echo '{}' |sam local invoke "RetrieveData"
 ```

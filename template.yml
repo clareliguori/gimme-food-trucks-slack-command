@@ -91,7 +91,7 @@ Resources:
       Description: >-
         A function that retrieves and stores the current data from seattlefoodtruck.com
       MemorySize: 128
-      Timeout: 3
+      Timeout: 300
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
