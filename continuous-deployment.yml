@@ -216,6 +216,46 @@ Resources:
         Location: !GetAtt 'CodeCommitRepo.CloneUrlHttp'
     Type: AWS::CodeBuild::Project
 
+  CodeBuildProjectLinter:
+    DependsOn:
+    - CodeBuildPolicy
+    - CodeCommitRepo
+    Properties:
+      Artifacts:
+        Location: !Ref 'ArtifactsBucket'
+        Name: 'build-output.zip'
+        NamespaceType: BUILD_ID
+        Packaging: ZIP
+        Path: 'codebuild'
+        Type: S3
+      Description: !Join
+        - ''
+        - - 'CodeBuild Project for '
+          - !Ref 'AWS::StackName'
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+        - Name: ARTIFACTS_BUCKET
+          Value: !Ref 'ArtifactsBucket'
+        Image: aws/codebuild/python:2.7.12
+        Type: LINUX_CONTAINER
+      Name: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - 'Lint'
+      ServiceRole: !Ref 'CodeBuildRole'
+      Source:
+        Type: CODECOMMIT
+        Location: !GetAtt 'CodeCommitRepo.CloneUrlHttp'
+        BuildSpec: |
+          version: 0.2
+          phases:
+            build:
+              commands:
+              - pip install cfn-lint
+              - cfn-lint --template deploy.yml --ignore-checks E3004
+    Type: AWS::CodeBuild::Project
+
   CodeBuildRole:
     Description: Creating service role in IAM for Amazon EC2 instances
     Properties:
@@ -292,6 +332,7 @@ Resources:
             Effect: Allow
             Resource:
             - !GetAtt 'CodeBuildProject.Arn'
+            - !GetAtt 'CodeBuildProjectLinter.Arn'
           - Action:
             - sns:Publish
             Effect: Allow
@@ -346,6 +387,7 @@ Resources:
     - CodePipelineTrustRole
     - ArtifactsBucket
     - CodeBuildProject
+    - CodeBuildProjectLinter
     - CloudFormationTrustRole
     Description: Creating a deployment pipeline for your project in AWS CodePipeline
     Properties:
@@ -397,6 +439,23 @@ Resources:
             - - !Ref 'AWS::StackName'
               - BuildArtifact
           RunOrder: 1
+        - ActionTypeId:
+            Category: Test
+            Owner: AWS
+            Provider: CodeBuild
+            Version: 1
+          Configuration:
+            ProjectName: !Join
+              - '-'
+              - - !Ref 'AWS::StackName'
+                - 'Lint'
+          InputArtifacts:
+          - Name: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - BuildArtifact
+          Name: Linter
+          RunOrder: 2
         Name: Build
       - Actions:
         - ActionTypeId:
