@@ -293,6 +293,11 @@ Resources:
             Resource:
             - !GetAtt 'CodeBuildProject.Arn'
           - Action:
+            - sns:Publish
+            Effect: Allow
+            Resource:
+            - !Ref ReleasePipelineManualApprovalTopic
+          - Action:
             - cloudformation:DescribeStacks
             - cloudformation:DescribeChangeSet
             - cloudformation:CreateChangeSet
@@ -331,6 +336,9 @@ Resources:
         - - !Ref 'AWS::StackName'
           - CodePipeline
     Type: AWS::IAM::Role
+
+  ReleasePipelineManualApprovalTopic:
+    Type: AWS::SNS::Topic
 
   ReleasePipeline:
     DependsOn:
@@ -429,6 +437,15 @@ Resources:
             ]
           RunOrder: 1
         - ActionTypeId:
+            Category: Approval
+            Owner: AWS
+            Provider: Manual
+            Version: 1
+          Configuration:
+            NotificationArn: !Ref ReleasePipelineManualApprovalTopic
+          Name: ApproveChangeSet
+          RunOrder: 2
+        - ActionTypeId:
             Category: Deploy
             Owner: AWS
             Provider: CloudFormation
@@ -445,7 +462,7 @@ Resources:
           Name: ExecuteChangeSet
           OutputArtifacts: [
             ]
-          RunOrder: 2
+          RunOrder: 3
         Name: Deploy
     Type: AWS::CodePipeline::Pipeline
 
