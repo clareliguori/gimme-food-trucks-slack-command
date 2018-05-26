@@ -361,6 +361,21 @@ Resources:
                       -  - !Ref 'AWS::StackName'
                          - application
                     - '*'
+            - !Join
+              - ':'
+              - - arn
+                - aws
+                - cloudformation
+                - !Ref 'AWS::Region'
+                - !Ref 'AWS::AccountId'
+                - !Join
+                  - /
+                  - - stack
+                    - !Join
+                      - '-'
+                      -  - !Ref 'AWS::StackName'
+                         - test
+                    - '*'
           - Action:
             - iam:PassRole
             Effect: Allow
@@ -480,6 +495,63 @@ Resources:
             StackName: !Join
             - '-'
             -  - !Ref 'AWS::StackName'
+               - test
+            TemplatePath: !Join
+            - ''
+            - - !Ref 'AWS::StackName'
+              - -BuildArtifact
+              - ::deploy.yml
+          InputArtifacts:
+          - Name: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - BuildArtifact
+          Name: GenerateChangeSet
+          OutputArtifacts: [
+            ]
+          RunOrder: 1
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: 1
+          Configuration:
+            ActionMode: CHANGE_SET_EXECUTE
+            ChangeSetName: pipeline-changeset
+            StackName: !Join
+            - '-'
+            -  - !Ref 'AWS::StackName'
+               - test
+          InputArtifacts: [
+            ]
+          Name: ExecuteChangeSet
+          OutputArtifacts: [
+            ]
+          RunOrder: 2
+        Name: Deploy-Test
+      - Actions:
+        - ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: 1
+          Configuration:
+            ActionMode: CHANGE_SET_REPLACE
+            Capabilities: CAPABILITY_IAM
+            ChangeSetName: pipeline-changeset
+            ParameterOverrides: !Join
+            - ''
+            - - '{"Address":"'
+              - !Ref 'Address'
+              - '","Token":"'
+              - !Ref Token
+              - '"}'
+            RoleArn: !GetAtt
+            - CloudFormationTrustRole
+            - Arn
+            StackName: !Join
+            - '-'
+            -  - !Ref 'AWS::StackName'
                - application
             TemplatePath: !Join
             - ''
@@ -522,7 +594,7 @@ Resources:
           OutputArtifacts: [
             ]
           RunOrder: 3
-        Name: Deploy
+        Name: Deploy-Prod
     Type: AWS::CodePipeline::Pipeline
 
   ArtifactBucketPolicy:
