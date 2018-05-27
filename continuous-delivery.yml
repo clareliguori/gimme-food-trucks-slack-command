@@ -601,7 +601,7 @@ Resources:
               - SourceArtifact
           Name: IntegTest
           RunOrder: 3
-        Name: Deploy-Test
+        Name: Test
       - Actions:
         - ActionTypeId:
             Category: Deploy
@@ -667,7 +667,7 @@ Resources:
           OutputArtifacts: [
             ]
           RunOrder: 3
-        Name: Deploy-Prod
+        Name: Deploy
     Type: AWS::CodePipeline::Pipeline
 
   ArtifactBucketPolicy:
