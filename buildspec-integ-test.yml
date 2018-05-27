@@ -1,0 +1,7 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - COMMAND_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`SlackURL`].OutputValue' --output text)
+      - curl -d "{\"token\":\"$TOKEN\"}" -H "Content-Type: application/json" -X POST $COMMAND_URL
