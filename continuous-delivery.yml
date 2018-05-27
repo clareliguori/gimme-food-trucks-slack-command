@@ -204,6 +204,25 @@ Resources:
                 - /
                 - - parameter
                   - !Ref 'Token'
+        - Action:
+          - cloudformation:DescribeStacks
+          Effect: Allow
+          Resource:
+          - !Join
+            - ':'
+            - - arn
+              - aws
+              - cloudformation
+              - !Ref 'AWS::Region'
+              - !Ref 'AWS::AccountId'
+              - !Join
+                - /
+                - - stack
+                  - !Join
+                    - '-'
+                    -  - !Ref 'AWS::StackName'
+                       - test
+                  - '*'
       PolicyName: !Join
         - '-'
         -  - !Ref 'AWS::StackName'
