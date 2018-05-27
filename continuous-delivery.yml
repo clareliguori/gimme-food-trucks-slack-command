@@ -563,7 +563,7 @@ Resources:
               - !Ref 'Address'
               - '","Token":"'
               - !Ref Token
-              - '"}'
+              - '","DeploymentSpeed":"AllAtOnce"}'
             RoleArn: !GetAtt
             - CloudFormationTrustRole
             - Arn
@@ -637,7 +637,7 @@ Resources:
               - !Ref 'Address'
               - '","Token":"'
               - !Ref Token
-              - '"}'
+              - '","DeploymentSpeed":"Linear10PercentEvery1Minute"}'
             RoleArn: !GetAtt
             - CloudFormationTrustRole
             - Arn

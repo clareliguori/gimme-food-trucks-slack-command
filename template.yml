@@ -10,6 +10,20 @@ Parameters:
   Token:
     Description: SSM Parameter Store parameter that stores the Slack token
     Type: String
+  DeploymentSpeed:
+    Description: CodeDeploy deployment speed
+    Type: String
+    Default: Linear10PercentEvery1Minute
+    AllowedValues:
+      - Canary10Percent30Minutes
+      - Canary10Percent5Minutes
+      - Canary10Percent10Minutes
+      - Canary10Percent15Minutes
+      - Linear10PercentEvery10Minutes
+      - Linear10PercentEvery1Minute
+      - Linear10PercentEvery2Minutes
+      - Linear10PercentEvery3Minutes
+      - AllAtOnce
 
 Outputs:
   SlackURL:
@@ -61,7 +75,7 @@ Resources:
           TOKEN_PARAMETER: !Ref Token
       AutoPublishAlias: live
       DeploymentPreference:
-        Type: Linear10PercentEvery1Minute
+        Type: !Ref DeploymentSpeed
         Alarms:
           - !Ref SlackCommandErrorsAlarm
 
