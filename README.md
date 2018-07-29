@@ -17,11 +17,9 @@ Store the token in Parameter Store:
 aws ssm put-parameter --name gimme-food-trucks-token --type SecureString --value <token>
 ```
 
-Create continuous deployment resources:
+Create continuous delivery resources:
 ```
-aws cloudformation create-stack --stack-name gimme-food-trucks --template-body file://continuous-deployment.yml --parameters ParameterKey=Address,ParameterValue="2111 7th Ave" ParameterKey=Token,ParameterValue=gimme-food-trucks-token --capabilities CAPABILITY_NAMED_IAM
-
-aws cloudformation wait stack-create-complete --stack-name gimme-food-trucks
+aws cloudformation deploy --stack-name gimme-food-trucks --template-file continuous-delivery.yml --parameter-overrides Address="2111 7th Ave" Token=gimme-food-trucks-token --capabilities CAPABILITY_NAMED_IAM
 ```
 
 Push to the newly created git repository:
